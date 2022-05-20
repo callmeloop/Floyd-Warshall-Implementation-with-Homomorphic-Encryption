@@ -44,4 +44,4 @@ RUN git clone https://github.com/microsoft/EVA.git \
 RUN pip3 install adhoccomputing \
     && pip3 install networkx
 
-COPY 519ProjectTemplate /development/519ProjectTemplate
+COPY src /development/519ProjectTemplate
