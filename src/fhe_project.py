@@ -5,6 +5,8 @@ from eva.metric import valuation_mse
 import timeit
 import networkx as nx
 import random
+
+from numpy import vectorize
 from floyd_warshall import floydWarshall
 # from plot_results import plot_results
 
@@ -13,7 +15,6 @@ MAX_WEIGHT = 10
 VECTOR_SIZE = 4096 * 4
 
 numberofnodes = 0
-
 
 # Using networkx, generate a random graph
 # You can change the way you generate the graph
@@ -71,6 +72,9 @@ def prepareInput(n, m):
     printGraph(graph, n)
     input['Graph'] = graph
     return input
+
+# returns the minimum number from encrypted outputs
+# needed in each floyd warshall iteration
 
 
 def findMinDistanceSealVal(encOutputs, index1, index2, index3):
@@ -145,10 +149,10 @@ def simulate(n):
 
     numberofnodes = n
     graph = inputs['Graph']
-    floydWarshall(graph, n)  # to check correctness of the algorithm
+    #floydWarshall(graph, n)  # for debugging purposes
 
     #################################################
-    print('Compile time')
+    #Compile time
     graphanaltic = EvaProgramDriver("graphanaltic", vec_size=m, n=n)
     with graphanaltic:
          graph = Input('Graph')
@@ -166,7 +170,7 @@ def simulate(n):
     save(signature, 'floyd.evasignature')
 
     #################################################
-    print('Key generation time')
+    #Key generation time
     start = timeit.default_timer()
     public_ctx, secret_ctx = generate_keys(params)
     keygenerationtime = (timeit.default_timer() - start) * 1000.0  # ms
@@ -174,21 +178,21 @@ def simulate(n):
     save(secret_ctx, 'floyd.sealsecret')
 
     #################################################
-    print('Runtime on client')
+    #Runtime on client
     start = timeit.default_timer()
     encInputs = public_ctx.encrypt(inputs, signature)
     encryptiontime = (timeit.default_timer() - start) * 1000.0  # ms
     save(encInputs, 'floyd_inputs.sealvals')
 
     #################################################
-    print('Runtime on server')
+    #Runtime on server
     start = timeit.default_timer()
     encOutputs = public_ctx.execute(compiled_multfunc, encInputs)
     executiontime = (timeit.default_timer() - start) * 1000.0  # ms
     save(encOutputs, 'floyd_outputs.sealvals')
 
     #################################################
-    print('Back on client')
+    #Back on client
     start = timeit.default_timer()
     outputs = secret_ctx.decrypt(encOutputs, signature)
     decryptiontime = (timeit.default_timer() - start) * 1000.0  # ms
@@ -197,8 +201,11 @@ def simulate(n):
     referenceexecutiontime = (timeit.default_timer() -
                                start) * 1000.0  # ms
     # Change this if you want to output something or comment out the two lines below
-    # for key in outputs:
-    #     print(key, float(outputs[key][0]), float(reference[key][0]))
+    for key in outputs:
+        print("OUTPUT:")
+        printGraph(outputs[key], numberofnodes)
+        print("REFERENCE:")
+        printGraph(reference[key], numberofnodes)
 
     # since CKKS does approximate computations, this is an important measure that depicts the amount of error
     mse = valuation_mse(outputs, reference)
@@ -207,13 +214,13 @@ def simulate(n):
 
 
 if __name__ == "__main__":
-    simcnt = 3  # The number of simulation runs, set it to 3 during development otherwise you will wait for a long time
+    simcnt = 100  # The number of simulation runs, set it to 3 during development otherwise you will wait for a long time
     # For benchmarking you must set it to a large number, e.g., 100
     # Note that file is opened in append mode, previous results will be kept in the file
     # Measurement results are collated in this file for you to plot later on
     resultfile = open("results.csv", "a")
     resultfile.write(
-        "NodeCount,PathLength,SimCnt,CompileTime,KeyGenerationTime,EncryptionTime,ExecutionTime,DecryptionTime,ReferenceExecutionTime,Mse\n")
+        "NodeCount,SimCnt,CompileTime,KeyGenerationTime,EncryptionTime,ExecutionTime,DecryptionTime,ReferenceExecutionTime,Mse\n")
     resultfile.close()
 
     print("Simulation campaing started:")

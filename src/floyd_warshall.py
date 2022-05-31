@@ -56,14 +56,10 @@ def floydWarshall(graph, numberofnodes):
  
  
 # A utility function to print the solution
-def printSolution(dist, numberofnodes):
+def printSolution(graph, n):
     print ("Following matrix shows the shortest distances\
  between every pair of vertices")
-    for i in range(numberofnodes):
-        for j in range(numberofnodes):
-            if(dist[i * numberofnodes + j] == INF):
-                print ("%7s" % ("INF"),end=" ")
-            else:
-                print("{:.2f}".format(dist[i * numberofnodes + j]), end = '\t')
-            if j == numberofnodes-1:
-                print ()
+    for row in range(n):
+        for column in range(n):
+            print("{:.2f}".format(graph[row*n+column]), end='\t')
+        print()
