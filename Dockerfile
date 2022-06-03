@@ -1,7 +1,7 @@
 #Download base image ubuntu 20.04
 FROM ubuntu:20.04
 # LABEL about the custom image
-LABEL maintainer="ertanon@gmail.com"
+LABEL maintainer="ilkersaglik.ee@gmail.com"
 LABEL version="0.1"
 LABEL description="This is a Microsoft EVA development environment image based on Ubuntu 20.04"
 
