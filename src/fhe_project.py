@@ -5,6 +5,7 @@ from eva.metric import valuation_mse
 import timeit
 import random
 import numpy as np
+from floyd_warshall import floydWarshall
 
 # from plot_results import plot_results
 
@@ -20,7 +21,19 @@ def printGraph(graph, n, vector_index):
             for j in range(n):
                 key = f"node_{i}_{j}"
                 matrix[i,j] = graph[key][vector_index]
+
+    np.set_printoptions(precision=2, suppress=True)
     print(matrix)
+
+def floydWarshallWithoutFhe(graph, n, vector_index):
+    matrix = np.zeros((n,n))
+    for i in range(n):
+            for j in range(n):
+                key = f"node_{i}_{j}"
+                matrix[i,j] = graph[key][vector_index]
+
+    np.set_printoptions(precision=2, suppress=True)
+    floydWarshall(matrix, n)
 
 
 # Eva requires special input, this function prepares the eva input
@@ -193,8 +206,10 @@ def simulate(n, vector_size):
     NUMBEROFNODES = n
     VECTOR_SIZE = vector_size
     inputs = prepareInputs(NUMBEROFNODES, vector_size)
-    # print("INPUT GRAPH")
-    # printGraph(inputs, NUMBEROFNODES, 0)
+    print("INPUT GRAPH")
+    printGraph(inputs, NUMBEROFNODES, 0)
+    # Result without FHE:
+    floydWarshallWithoutFhe(inputs, NUMBEROFNODES, 0)
 
     compiletime = 0
     keygenerationtime = 0
@@ -215,14 +230,14 @@ def simulate(n, vector_size):
         mse = results['mse']
         inputs = updateInputsFromMinDistance(outputs)
 
-    # print("OUTPUT MATRIX")
-    # output = inputs
-    # printGraph(output, NUMBEROFNODES, 0)
+    print("OUTPUT MATRIX")
+    output = inputs
+    printGraph(output, NUMBEROFNODES, 0)
     return compiletime, keygenerationtime, encryptiontime, executiontime, decryptiontime, referenceexecutiontime, mse
 
 
 if __name__ == "__main__":
-    simcnt = 3  # The number of simulation runs, set it to 3 during development otherwise you will wait for a long time
+    simcnt = 100  # The number of simulation runs, set it to 3 during development otherwise you will wait for a long time
     # For benchmarking you must set it to a large number, e.g., 100
     # Note that file is opened in append mode, previous results will be kept in the file
     # Measurement results are collated in this file for you to plot later on
@@ -232,7 +247,7 @@ if __name__ == "__main__":
     resultfile.close()
 
     print("Simulation campaign started:")
-    for nc in range(10, 14, 4):  # Node counts for experimenting various graph sizes
+    for nc in range(2, 14, 4):  # Node counts for experimenting various graph sizes
         n = nc
         vectorsize = 1024
         resultfile = open("results.csv", "a")
